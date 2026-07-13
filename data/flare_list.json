@@ -1,0 +1,31 @@
+[
+    {
+        "start_time": "2026-07-11T02:48:00+00:00",
+        "peak_time": "Pending",
+        "end_time": "Pending",
+        "start_flux": 8.8e-08,
+        "peak_flux": "Pending",
+        "end_flux": "Pending",
+        "prediction_3m": 3.7194067162868766e-06,
+        "prediction_5m": "-",
+        "prediction_10m": "-",
+        "prediction_15m": "-",
+        "prediction_20m": "-",
+        "prediction_25m": "-"
+    },
+    {
+        "start_time": "2026-07-13T17:54:00+00:00",
+        "peak_time": "Pending",
+        "end_time": "Pending",
+        "start_flux": 8.8e-08,
+        "peak_flux": "Pending",
+        "end_flux": "Pending",
+        "prediction_3m": 6.371912313261906e-06,
+        "prediction_5m": "-",
+        "prediction_10m": "-",
+        "prediction_15m": "-",
+        "prediction_20m": "-",
+        "prediction_25m": "-",
+        "prediction_11m": 3.4365019923851722e-06
+    }
+]

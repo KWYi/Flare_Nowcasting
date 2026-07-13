@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Solar flare peak-flux nowcasting event list">
+  <title>Nowcasting List | Solar Flare Peak-Flux Nowcast</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="assets/js/list.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <div>
+      <p class="eyebrow">REAL-TIME SOLAR FLARE MONITORING</p>
+      <h1>Solar Flare Peak-Flux Nowcast</h1>
+    </div>
+    <nav aria-label="Main navigation">
+      <a class="nav-link" href="index.html">Nowcast</a>
+      <a class="nav-link active" href="nowcasting-list.html">Nowcasting List</a>
+    </nav>
+  </header>
+
+  <main class="page-shell">
+    <section class="card list-card" aria-labelledby="list-title">
+      <div class="section-heading">
+        <div>
+          <h2 id="list-title">Nowcasting List</h2>
+          <p>Events are sorted by start time, newest first.</p>
+        </div>
+        <div class="update-box">
+          <span>Records</span>
+          <strong id="record-count">—</strong>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table id="flare-table">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p id="table-message" class="message" hidden></p>
+    </section>
+  </main>
+
+  <footer>
+    <span>All times are shown in UTC.</span>
+    <span id="page-refresh-time">Page refreshed: —</span>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+    "save_time": "2026-07-11T03:01:00+00:00",
+    "flare_state": "activate",
+    "start_time": "2026-07-11T02:48:00+00:00",
+    "start_flux": 8.8e-08,
+    "peak_time": "2026-07-11T02:59:00+00:00",
+    "peak_flux": 2.45e-06,
+    "estimated_end_flux": 1.269e-06,
+    "end_time": "2026-07-11T03:11:00+00:00",
+    "end_flux": 1.1421e-06,
+    "after_onset": 23,
+    "state": "completed"
+}
