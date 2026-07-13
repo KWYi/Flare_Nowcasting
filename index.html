@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Real-time solar flare peak-flux nowcasting dashboard">
+  <title>Solar Flare Peak-Flux Nowcast</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" defer></script>
+  <script src="assets/js/app.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <div>
+      <p class="eyebrow">REAL-TIME SOLAR FLARE MONITORING</p>
+      <h1>Solar Flare Peak-Flux Nowcast</h1>
+    </div>
+    <nav aria-label="Main navigation">
+      <a class="nav-link active" href="index.html">Nowcast</a>
+      <a class="nav-link" href="nowcasting-list.html">Nowcasting History</a>
+    </nav>
+  </header>
+
+  <main class="page-shell">
+    <section class="card chart-card" aria-labelledby="chart-title">
+      <div class="section-heading">
+        <div>
+          <h2 id="chart-title">Latest GOES X-ray Flux</h2>
+          <p>0.1–0.8 nm channel · 1-minute cadence · UTC</p>
+        </div>
+        <div class="update-box">
+          <span>Last data update</span>
+          <strong id="last-update">—</strong>
+        </div>
+      </div>
+
+      <div id="xray-chart" class="chart" role="img" aria-label="GOES X-ray flux time series and peak-flux nowcast"></div>
+      <p id="chart-message" class="message" hidden></p>
+    </section>
+
+    <section class="card status-card" aria-labelledby="status-title">
+      <div class="state-line">
+        <span id="status-title">Current Flare State:</span>
+        <strong id="flare-state" class="state-badge state-none">None</strong>
+      </div>
+
+      <h3 class="latest-flare-title">Latest Flare</h3>
+
+      <div class="flare-details">
+        <div class="detail-item">
+          <span>Start Time</span>
+          <strong id="flare-start-time">—</strong>
+        </div>
+        <div class="detail-item">
+          <span>Peak Time</span>
+          <strong id="flare-peak-time">—</strong>
+        </div>
+        <div class="detail-item">
+          <span>End Time</span>
+          <strong id="flare-end-time">—</strong>
+        </div>
+        <div class="detail-item">
+          <span>Peak Flux</span>
+          <strong id="flare-peak-flux">—</strong>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>All times are shown in UTC.</span>
+    <span id="page-refresh-time">Page refreshed: —</span>
+  </footer>
+</body>
+</html>

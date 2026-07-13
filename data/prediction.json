@@ -1,8 +1,8 @@
 {
-    "prediction": 1.8661810472048242e-06,
-    "total_uncertainty": 0.2925512492656708,
+    "prediction": 2.004830455177275e-06,
+    "total_uncertainty": 0.29829877614974976,
     "prediction_interval": {
-        "lower": 4.851223416413126e-07,
-        "upper": 7.178873042960089e-06
+        "lower": 5.075514802637865e-07,
+        "upper": 7.9190886250935e-06
     }
 }
