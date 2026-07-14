@@ -1,1 +1,20 @@
-[]
+[
+    {
+        "processing_mode": "operational",
+        "flare_detection_time": "2026-07-24T04:05:00+00:00",
+        "start_time": "2026-07-24T03:59:00+00:00",
+        "start_flux": "1.19E-6",
+        "peak_time": "2026-07-24T04:05:00+00:00",
+        "peak_flux": "1.81E-6",
+        "end_time": "2026-07-24T04:08:00+00:00",
+        "end_flux": "1.45E-6",
+        "minutes_after_onset": 10,
+        "minutes_after_detection": 4,
+        "prediction_0m": "2.30E-6",
+        "prediction_3m": "2.71E-6",
+        "prediction_5m": "-",
+        "prediction_10m": "-",
+        "prediction_15m": "-",
+        "prediction_20m": "-"
+    }
+]
