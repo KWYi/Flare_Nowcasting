@@ -1,8 +1,15 @@
 {
-    "prediction": 2.004830455177275e-06,
-    "total_uncertainty": 0.29829877614974976,
+    "flare_detection_time": "2026-11-07T14:44:00+00:00",
+    "flare_start_time": "2026-11-07T14:38:00+00:00",
+    "prediction_time": "2026-11-07T14:46:00+00:00",
+    "prediction_reference": "flare_detection_time",
+    "minutes_after_detection": 2,
+    "minutes_after_onset": 8,
+    "state": "EVENT_RISE",
+    "prediction": 2.7317222116649508e-06,
+    "total_uncertainty": 0.29840599984841376,
     "prediction_interval": {
-        "lower": 5.075514802637865e-07,
-        "upper": 7.9190886250935e-06
+        "lower": 6.912331125430619e-07,
+        "upper": 1.0795643475830692e-05
     }
 }
