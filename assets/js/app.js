@@ -1,11 +1,14 @@
+const DATA_BASE =
+  "https://raw.githubusercontent.com/KWYi/Flare_Nowcasting/live_data/data";
+
 const DATA_PATHS = {
-  xray: "data/latest_X-ray_60m.json",
-  state: "data/latest_state.json",
-  latestFlare: "data/latest_flare.json",
-  prediction: "data/prediction.json",
+  xray: `${DATA_BASE}/latest_X-ray_60m.json`,
+  state: `${DATA_BASE}/latest_state.json`,
+  latestFlare: `${DATA_BASE}/latest_flare.json`,
+  prediction: `${DATA_BASE}/prediction.json`,
 };
 
-const REFRESH_INTERVAL_MS = 60_000;
+const REFRESH_INTERVAL_MS = 30_000;
 const Y_MIN = 1e-7;
 const Y_MAX = 1e-2;
 const FUTURE_SPACE_MINUTES = 12;
