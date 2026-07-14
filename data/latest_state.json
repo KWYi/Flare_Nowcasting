@@ -1,12 +1,18 @@
 {
-    "save_time": "2026-07-14T15:17:00+00:00",
-    "flare_state": "none",
-    "start_time": "none",
-    "start_flux": "none",
-    "peak_time": "none",
-    "peak_flux": "none",
-    "estimated_end_flux": "none",
-    "end_time": "none",
-    "end_flux": "none",
-    "after_onset": "none"
+    "schema_version": 2,
+    "save_time": "2026-10-31T19:20:00+00:00",
+    "state": "MONITORING",
+    "flare_state": "MONITORING",
+    "event_active": false,
+    "flare_detection_time": "2026-10-31T09:11:00+00:00",
+    "start_time": "2026-10-31T09:04:00+00:00",
+    "start_flux": 2.0655973287375673e-07,
+    "peak_time": "2026-10-31T09:14:00+00:00",
+    "peak_flux": 6.388908673216065e-07,
+    "end_time": "2026-10-31T09:24:00+00:00",
+    "end_flux": 4.053578379625833e-07,
+    "minutes_after_onset": 21,
+    "minutes_after_detection": 14,
+    "after_onset": 21,
+    "after_detection": 14
 }

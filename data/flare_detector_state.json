@@ -1,0 +1,15 @@
+{
+    "schema_version": 2,
+    "save_time": "2026-10-31T19:20:00+00:00",
+    "prev_status": "MONITORING",
+    "background": -999.0,
+    "algorithm_start_time": "2026-10-31T09:04:00+00:00",
+    "algorithm_start_flux": 2.0655973287375673e-07,
+    "peak_time": "2026-10-31T09:14:00+00:00",
+    "peak_flux": 6.388908673216065e-07,
+    "mins_since_peak": 3,
+    "integrated_flux": 0.0005818732006446226,
+    "sequential_flare_num": 0,
+    "prev_flare_ended": true,
+    "time_of_prev_peak": "2026-10-31T09:17:00+00:00"
+}
