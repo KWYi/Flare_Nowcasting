@@ -149,24 +149,32 @@ function normalizeState(value) {
 function renderState(state, latestFlare) {
   const stateName = normalizeState(state?.flare_state);
   const stateElement = document.getElementById("flare-state");
-
   const active = stateName === "activate";
 
   stateElement.textContent = active ? "Activate" : "None";
   stateElement.className =
     `state-badge ${active ? "state-activate" : "state-none"}`;
 
+  // latest_flare.json이 없는 경우
+  if (!latestFlare) {
+    document.getElementById("flare-start-time").textContent = "--:--";
+    document.getElementById("flare-peak-time").textContent = "--:--";
+    document.getElementById("flare-end-time").textContent = "--:--";
+    document.getElementById("flare-peak-flux").textContent = "--";
+    return;
+  }
+
   document.getElementById("flare-start-time").textContent =
-    formatUtc(latestFlare?.start_time);
+    formatUtc(latestFlare.start_time);
 
   document.getElementById("flare-peak-time").textContent =
-    formatUtc(latestFlare?.peak_time);
+    formatUtc(latestFlare.peak_time);
 
   document.getElementById("flare-end-time").textContent =
-    formatUtc(latestFlare?.end_time);
+    formatUtc(latestFlare.end_time);
 
   document.getElementById("flare-peak-flux").textContent =
-    formatScientific(latestFlare?.peak_flux);
+    formatScientific(latestFlare.peak_flux);
 }
 
 function makePredictionTraces(predictionDate, predictionData) {
@@ -535,7 +543,7 @@ async function refreshDashboard() {
     ] = await Promise.all([
       fetchJson(DATA_PATHS.xray),
       fetchJson(DATA_PATHS.state),
-      fetchJson(DATA_PATHS.latestFlare),
+      fetchOptionalJson(DATA_PATHS.latestFlare),
       fetchJson(DATA_PATHS.prediction),
     ]);
 
