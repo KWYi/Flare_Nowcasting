@@ -1,200 +1,160 @@
-<!doctype html>
+const DATA_BASE =
+  "https://raw.githubusercontent.com/KWYi/Flare_Nowcasting/live_data/data";
 
-<html lang="en">
+const FLARE_LIST_PATH =
+  `${DATA_BASE}/flare_list.json`;
 
-<head>
-  <meta charset="utf-8">
+const REFRESH_INTERVAL_MS = 30_000;
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1"
-  >
+const PRIORITY_COLUMNS = [
+  "start_time",
+  "peak_time",
+  "end_time",
+  "start_flux",
+  "peak_flux",
+  "end_flux",
+];
 
-  <meta
-    name="description"
-    content="Real-time solar flare peak-flux nowcasting dashboard"
-  >
+function fetchJson(path) {
+  const separator = path.includes("?") ? "&" : "?";
+  return fetch(`${path}${separator}v=${Date.now()}`, { cache: "no-store" }).then((response) => {
+    if (!response.ok) throw new Error(`${path}: HTTP ${response.status}`);
+    return response.json();
+  });
+}
 
-  <title>Solar Flare Peak-Flux Nowcast</title>
+function isFiniteNumber(value) {
+  return typeof value === "number" && Number.isFinite(value);
+}
 
-  <link
-    rel="stylesheet"
-    href="assets/css/style.css"
-  >
+function parseDate(value) {
+  if (!value || typeof value !== "string") return null;
+  const normalized = value.includes("T") ? value : value.replace(" ", "T");
+  const date = new Date(normalized);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
 
-  <script
-    src="https://cdn.plot.ly/plotly-2.35.2.min.js"
-    defer
-  ></script>
+function formatUtc(value) {
+  const date = value instanceof Date ? value : parseDate(value);
+  if (!date) return String(value ?? "—");
+  const pad = (number) => String(number).padStart(2, "0");
+  return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())} ${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())} UTC`;
+}
 
-  <script
-    src="assets/js/app.js"
-    defer
-  ></script>
-</head>
+function humanizeColumn(column) {
+  return column
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
 
-<body>
-  <header class="site-header">
-    <div>
-      <p class="eyebrow">
-        REAL-TIME SOLAR FLARE MONITORING
-      </p>
+function predictionMinute(column) {
+  const match = column.match(/^prediction_(\d+)m$/);
+  return match ? Number(match[1]) : Number.POSITIVE_INFINITY;
+}
 
-      <h1>
-        Solar Flare Peak-Flux Nowcast
-      </h1>
-    </div>
+function collectColumns(rows) {
+  const allColumns = new Set(rows.flatMap((row) => Object.keys(row)));
+  const priority = PRIORITY_COLUMNS.filter((column) => allColumns.has(column));
+  const predictionColumns = [...allColumns]
+    .filter((column) => /^prediction_\d+m$/.test(column))
+    .sort((a, b) => predictionMinute(a) - predictionMinute(b));
+  const remaining = [...allColumns]
+    .filter((column) => !priority.includes(column) && !predictionColumns.includes(column))
+    .sort();
+  return [...priority, ...predictionColumns, ...remaining];
+}
 
-    <nav aria-label="Main navigation">
-      <a
-        class="nav-link active"
-        href="index.html"
-      >
-        Nowcast
-      </a>
+function isTimeColumn(column) {
+  return column.endsWith("_time") || column === "save_time";
+}
 
-      <a
-        class="nav-link"
-        href="nowcasting-list.html"
-      >
-        Nowcasting History
-      </a>
-    </nav>
-  </header>
+function isFluxOrPredictionColumn(column) {
+  return column.includes("flux") || column.startsWith("prediction_");
+}
 
-  <main class="page-shell">
-    <section
-      class="card chart-card"
-      aria-labelledby="chart-title"
-    >
-      <div class="section-heading">
-        <div>
-          <h2 id="chart-title">
-            Latest GOES X-ray Flux
-          </h2>
+function formatCell(column, value) {
+  if (value === null || value === undefined || value === "") {
+    return { text: "—", className: "empty-value" };
+  }
+  if (isFiniteNumber(value) && isFluxOrPredictionColumn(column)) {
+    return { text: value.toExponential(2), className: "numeric" };
+  }
+  if (isTimeColumn(column)) {
+    const lower = String(value).toLowerCase();
+    if (["pending", "none", "-"].includes(lower)) {
+      return { text: value, className: lower === "pending" ? "pending" : "empty-value" };
+    }
+    return { text: formatUtc(value), className: "" };
+  }
+  const text = String(value);
+  return {
+    text,
+    className: text.toLowerCase() === "pending" ? "pending" : text === "-" ? "empty-value" : "",
+  };
+}
 
-          <p>
-            0.1–0.8 nm channel · 1-minute cadence · UTC
-          </p>
-        </div>
+function renderTable(data) {
+  const rows = Array.isArray(data) ? [...data] : [];
+  rows.sort((a, b) => {
+    const aDate = parseDate(a.start_time)?.getTime() ?? Number.NEGATIVE_INFINITY;
+    const bDate = parseDate(b.start_time)?.getTime() ?? Number.NEGATIVE_INFINITY;
+    return bDate - aDate;
+  });
 
-        <div class="update-box">
-          <span>
-            Last data update
-          </span>
+  const table = document.getElementById("flare-table");
+  const thead = table.querySelector("thead");
+  const tbody = table.querySelector("tbody");
+  thead.replaceChildren();
+  tbody.replaceChildren();
 
-          <strong id="last-update">
-            —
-          </strong>
-        </div>
-      </div>
+  if (rows.length === 0) {
+    table.hidden = true;
+    document.getElementById("record-count").textContent = "0";
+    return;
+  }
 
-      <div
-        id="xray-chart"
-        class="chart"
-        role="img"
-        aria-label="GOES X-ray flux time series and peak-flux nowcast"
-      ></div>
+  table.hidden = false;
+  const columns = collectColumns(rows);
+  const headerRow = document.createElement("tr");
+  columns.forEach((column) => {
+    const th = document.createElement("th");
+    th.scope = "col";
+    th.textContent = humanizeColumn(column);
+    headerRow.appendChild(th);
+  });
+  thead.appendChild(headerRow);
 
-      <p
-        id="chart-message"
-        class="message"
-        hidden
-      ></p>
-    </section>
+  rows.forEach((row) => {
+    const tr = document.createElement("tr");
+    columns.forEach((column) => {
+      const td = document.createElement("td");
+      const formatted = formatCell(column, row[column]);
+      td.textContent = formatted.text;
+      if (formatted.className) td.className = formatted.className;
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
 
-    <section
-      class="card status-card"
-      aria-labelledby="status-title"
-    >
-      <div class="state-line">
-        <span id="status-title">
-          Current Flare State:
-        </span>
+  document.getElementById("record-count").textContent = String(rows.length);
+}
 
-        <strong
-          id="flare-state"
-          class="state-badge state-none"
-        >
-          None
-        </strong>
-      </div>
+async function refreshList() {
+  const message = document.getElementById("table-message");
+  try {
+    const data = await fetchJson(FLARE_LIST_PATH);
+    renderTable(data);
+    message.hidden = true;
+  } catch (error) {
+    console.error(error);
+    message.textContent = `Unable to update the nowcasting list: ${error.message}`;
+    message.hidden = false;
+  } finally {
+    document.getElementById("page-refresh-time").textContent = `Page refreshed: ${formatUtc(new Date())}`;
+  }
+}
 
-      <h3 class="latest-flare-title">
-        Latest Flare
-      </h3>
-
-      <div class="flare-details">
-        <div class="detail-item">
-          <span>
-            Start Time
-          </span>
-
-          <strong id="flare-start-time">
-            —
-          </strong>
-        </div>
-
-        <div class="detail-item">
-          <span>
-            Peak Time
-          </span>
-
-          <strong id="flare-peak-time">
-            —
-          </strong>
-        </div>
-
-        <div class="detail-item">
-          <span>
-            End Time
-          </span>
-
-          <strong id="flare-end-time">
-            —
-          </strong>
-        </div>
-
-        <div class="detail-item">
-          <span>
-            Peak Flux
-          </span>
-
-          <strong id="flare-peak-flux">
-            —
-          </strong>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <footer class="site-footer">
-    <div class="developer-block">
-      <p class="developer-label">
-        Developers
-      </p>
-
-      <p class="developer-names">
-        Kangwoo Yi<sup>1</sup> (ky263@njit.edu),
-        Qin Li<sup>1</sup>,
-        Haodi Jiang<sup>2</sup>,
-        Meiqi Wang<sup>1</sup>,
-        Haimin Wang<sup>1</sup>
-      </p>
-
-      <p class="developer-affiliation">
-        <sup>1</sup> New Jersey Institute of Technology
-      </p>
-
-      <p class="developer-affiliation">
-        <sup>2</sup> Sam Houston State University
-      </p>
-    </div>
-
-    <span id="page-refresh-time">
-      Page refreshed: —
-    </span>
-  </footer>
-</body>
-
-</html>
+window.addEventListener("DOMContentLoaded", () => {
+  refreshList();
+  window.setInterval(refreshList, REFRESH_INTERVAL_MS);
+});
