@@ -13,9 +13,6 @@ const REFRESH_INTERVAL_MS = 30_000;
 const Y_MIN = 1e-7;
 const Y_MAX = 1e-2;
 
-const FUTURE_SPACE_MINUTES = 12;
-const PREDICTION_X_OFFSET_MINUTES = 7;
-
 function fetchJson(path) {
   const separator = path.includes("?") ? "&" : "?";
 
@@ -177,135 +174,102 @@ function renderState(state, latestFlare) {
     formatScientific(latestFlare.peak_flux);
 }
 
-function makePredictionTraces(predictionDate, predictionData) {
+function makePredictionOverlay(predictionData) {
   const predicted = predictionData?.prediction;
   const lower = predictionData?.prediction_interval?.lower;
   const upper = predictionData?.prediction_interval?.upper;
 
   if (![predicted, lower, upper].every(isFiniteNumber)) {
     return {
-      traces: [],
+      shapes: [],
       annotations: [],
     };
   }
 
-  const capMilliseconds = 45_000;
-
-  /*
-   * All values passed to Plotly are UTC strings rather than
-   * JavaScript Date objects.
-   */
-  const predictionX = formatPlotlyUtc(predictionDate);
-
-  const xLowerCap = formatPlotlyUtc(
-    new Date(predictionDate.getTime() - capMilliseconds)
-  );
-
-  const xUpperCap = formatPlotlyUtc(
-    new Date(predictionDate.getTime() + capMilliseconds)
-  );
-
-  const intervalTrace = {
-    x: [
-      predictionX,
-      predictionX,
-      null,
-      xLowerCap,
-      xUpperCap,
-      null,
-      xLowerCap,
-      xUpperCap,
-    ],
-    y: [
-      lower,
-      upper,
-      null,
-      lower,
-      lower,
-      null,
-      upper,
-      upper,
-    ],
-    type: "scatter",
-    mode: "lines",
-    name: "Prediction interval",
-    line: {
-      color: "#d62828",
-      width: 3,
-    },
-    hoverinfo: "skip",
-    showlegend: true,
-  };
-
-  const markerTrace = {
-    x: [predictionX],
-    y: [predicted],
-    type: "scatter",
-    mode: "markers",
-    name: "Peak-flux nowcast",
-    marker: {
-      symbol: "square",
-      size: 16,
-      color: "#d62828",
+  const shapes = [
+    {
+      type: "rect",
+      xref: "paper",
+      x0: 0,
+      x1: 1,
+      yref: "y",
+      y0: lower,
+      y1: upper,
+      fillcolor: "rgba(214, 40, 40, 0.12)",
       line: {
-        color: "#8f1010",
-        width: 2,
+        width: 0,
+      },
+      layer: "below",
+    },
+    {
+      type: "line",
+      xref: "paper",
+      x0: 0,
+      x1: 1,
+      yref: "y",
+      y0: predicted,
+      y1: predicted,
+      line: {
+        color: "#d62828",
+        width: 2.5,
+        dash: "dash",
       },
     },
-    customdata: [[lower, upper]],
-    hovertemplate:
-      "<b>Peak-flux nowcast</b>" +
-      "<br>Prediction: %{y:.2e} W m⁻²" +
-      "<br>Lower: %{customdata[0]:.2e} W m⁻²" +
-      "<br>Upper: %{customdata[1]:.2e} W m⁻²" +
-      "<extra></extra>",
-  };
-
-  const annotationStyle = {
-    xref: "x",
-    yref: "y",
-    showarrow: false,
-    xanchor: "left",
-    xshift: 12,
-    font: {
-      color: "#b71919",
-      size: 12,
-    },
-    bgcolor: "rgba(255,255,255,0.86)",
-    borderpad: 2,
-  };
+  ];
 
   const annotations = [
     {
-      ...annotationStyle,
-      x: predictionX,
-      y: upper,
-      text: `Upper ${formatScientific(upper)}`,
-      yanchor: "bottom",
-    },
-    {
-      ...annotationStyle,
-      x: predictionX,
+      xref: "paper",
+      x: 1,
+      yref: "y",
       y: predicted,
-      text: `Prediction ${formatScientific(predicted)}`,
-      yanchor: "middle",
+      text: `Predicted peak: ${formatScientific(predicted)}`,
+      showarrow: false,
+      xanchor: "right",
+      yanchor: "bottom",
+      xshift: -8,
+      yshift: 5,
       font: {
         color: "#b71919",
         size: 12,
-        weight: 700,
+      },
+      bgcolor: "rgba(255,255,255,0.88)",
+      borderpad: 3,
+    },
+    {
+      xref: "paper",
+      x: 1,
+      yref: "y",
+      y: upper,
+      text: `Upper: ${formatScientific(upper)}`,
+      showarrow: false,
+      xanchor: "right",
+      yanchor: "bottom",
+      xshift: -8,
+      font: {
+        color: "#b71919",
+        size: 11,
       },
     },
     {
-      ...annotationStyle,
-      x: predictionX,
+      xref: "paper",
+      x: 1,
+      yref: "y",
       y: lower,
-      text: `Lower ${formatScientific(lower)}`,
+      text: `Lower: ${formatScientific(lower)}`,
+      showarrow: false,
+      xanchor: "right",
       yanchor: "top",
+      xshift: -8,
+      font: {
+        color: "#b71919",
+        size: 11,
+      },
     },
   ];
 
   return {
-    traces: [intervalTrace, markerTrace],
+    shapes,
     annotations,
   };
 }
@@ -342,11 +306,6 @@ function renderChart(xrayData, state, predictionData) {
   const firstTime = validTimes[0];
   const lastTime = validTimes[validTimes.length - 1];
 
-  const xAxisEndDate = new Date(
-    lastTime.getTime() +
-    FUTURE_SPACE_MINUTES * 60_000
-  );
-
   const xAxisStart = formatPlotlyUtc(firstTime);
   const xAxisEnd = formatPlotlyUtc(xAxisEndDate);
 
@@ -368,21 +327,16 @@ function renderChart(xrayData, state, predictionData) {
   };
 
   const traces = [observedTrace];
+
+  let predictionShapes = [];
   let annotations = [];
 
   if (normalizeState(state?.flare_state) === "activate") {
-    const predictionDate = new Date(
-      lastTime.getTime() +
-      PREDICTION_X_OFFSET_MINUTES * 60_000
-    );
+    const predictionOverlay =
+      makePredictionOverlay(predictionData);
 
-    const predictionPlot = makePredictionTraces(
-      predictionDate,
-      predictionData
-    );
-
-    traces.push(...predictionPlot.traces);
-    annotations = predictionPlot.annotations;
+    predictionShapes = predictionOverlay.shapes;
+    annotations = predictionOverlay.annotations;
   }
 
   const layout = {
@@ -465,6 +419,7 @@ function renderChart(xrayData, state, predictionData) {
     },
     annotations,
     shapes: [
+      ...predictionShapes,
       {
         type: "line",
         xref: "paper",
