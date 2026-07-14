@@ -491,10 +491,10 @@ async function refreshDashboard() {
 
   try {
     const [
-      xrayData,
-      state,
-      latestFlare,
-      prediction,
+      xrayResult,
+      stateResult,
+      latestFlareResult,
+      predictionResult,
     ] = await Promise.allSettled([
       fetchJson(DATA_PATHS.xray),
       fetchJson(DATA_PATHS.state),
@@ -502,36 +502,58 @@ async function refreshDashboard() {
       fetchJson(DATA_PATHS.prediction),
     ]);
 
-    // X-ray 데이터만큼은 반드시 있어야 그래프를 그릴 수 있음
+    // X-ray 데이터가 없으면 그래프를 그릴 수 없으므로 오류 처리
     if (xrayResult.status === "rejected") {
       throw xrayResult.reason;
     }
-    
+
     const xrayData = xrayResult.value;
-    
+
     const stateData =
       stateResult.status === "fulfilled"
         ? stateResult.value
         : null;
-    
+
     const latestFlare =
       latestFlareResult.status === "fulfilled"
         ? latestFlareResult.value
         : null;
-    
+
     const predictionData =
       predictionResult.status === "fulfilled"
         ? predictionResult.value
         : null;
 
+    // 선택적 파일 로딩 실패는 콘솔에만 표시
+    if (stateResult.status === "rejected") {
+      console.error(
+        "Failed to load latest_state.json:",
+        stateResult.reason
+      );
+    }
+
+    if (latestFlareResult.status === "rejected") {
+      console.error(
+        "Failed to load latest_flare.json:",
+        latestFlareResult.reason
+      );
+    }
+
+    if (predictionResult.status === "rejected") {
+      console.error(
+        "Failed to load prediction.json:",
+        predictionResult.reason
+      );
+    }
+
     renderChart(
       xrayData,
-      state,
-      prediction
+      stateData,
+      predictionData
     );
 
     renderState(
-      state,
+      stateData,
       latestFlare
     );
 
