@@ -495,12 +495,34 @@ async function refreshDashboard() {
       state,
       latestFlare,
       prediction,
-    ] = await Promise.all([
+    ] = await Promise.allSettled([
       fetchJson(DATA_PATHS.xray),
       fetchJson(DATA_PATHS.state),
       fetchOptionalJson(DATA_PATHS.latestFlare),
       fetchJson(DATA_PATHS.prediction),
     ]);
+
+    // X-ray 데이터만큼은 반드시 있어야 그래프를 그릴 수 있음
+    if (xrayResult.status === "rejected") {
+      throw xrayResult.reason;
+    }
+    
+    const xrayData = xrayResult.value;
+    
+    const stateData =
+      stateResult.status === "fulfilled"
+        ? stateResult.value
+        : null;
+    
+    const latestFlare =
+      latestFlareResult.status === "fulfilled"
+        ? latestFlareResult.value
+        : null;
+    
+    const predictionData =
+      predictionResult.status === "fulfilled"
+        ? predictionResult.value
+        : null;
 
     renderChart(
       xrayData,
