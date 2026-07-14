@@ -30,6 +30,26 @@ function fetchJson(path) {
   });
 }
 
+async function fetchOptionalJson(path) {
+  const separator = path.includes("?") ? "&" : "?";
+
+  const response = await fetch(
+    `${path}${separator}v=${Date.now()}`,
+    { cache: "no-store" }
+  );
+
+  // 파일이 아직 생성되지 않은 경우
+  if (response.status === 404) {
+    return null;
+  }
+
+  if (!response.ok) {
+    throw new Error(`${path}: HTTP ${response.status}`);
+  }
+
+  return response.json();
+}
+
 function isFiniteNumber(value) {
   return typeof value === "number" && Number.isFinite(value);
 }
