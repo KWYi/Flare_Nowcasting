@@ -307,7 +307,7 @@ function renderChart(xrayData, state, predictionData) {
   const lastTime = validTimes[validTimes.length - 1];
 
   const xAxisStart = formatPlotlyUtc(firstTime);
-  const xAxisEnd = formatPlotlyUtc(xAxisEndDate);
+  const xAxisEnd = formatPlotlyUtc(xAxisEnd);
 
   const observedTrace = {
     x: plotTimes,
