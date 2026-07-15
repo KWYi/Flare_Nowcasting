@@ -22,7 +22,6 @@ DATA_DIR="$REPO_ROOT/data"
 FILES=(
   "latest_X-ray_60m.json"
   "latest_state.json"
-  "latest_flare.json"
   "prediction.json"
   "flare_list.json"
 )
