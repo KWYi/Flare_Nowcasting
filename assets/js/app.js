@@ -4,7 +4,6 @@ const DATA_BASE =
 const DATA_PATHS = {
   xray: `${DATA_BASE}/latest_X-ray_60m.json`,
   state: `${DATA_BASE}/latest_state.json`,
-  latestFlare: `${DATA_BASE}/latest_flare.json`,
   prediction: `${DATA_BASE}/prediction.json`,
 };
 
@@ -25,26 +24,6 @@ function fetchJson(path) {
 
     return response.json();
   });
-}
-
-async function fetchOptionalJson(path) {
-  const separator = path.includes("?") ? "&" : "?";
-
-  const response = await fetch(
-    `${path}${separator}v=${Date.now()}`,
-    { cache: "no-store" }
-  );
-
-  // 파일이 아직 생성되지 않은 경우
-  if (response.status === 404) {
-    return null;
-  }
-
-  if (!response.ok) {
-    throw new Error(`${path}: HTTP ${response.status}`);
-  }
-
-  return response.json();
 }
 
 function isFiniteNumber(value) {
@@ -143,7 +122,7 @@ function normalizeState(value) {
   return String(value ?? "none").trim().toLowerCase();
 }
 
-function renderState(state, latestFlare) {
+function renderState(state) {
   const stateName = normalizeState(state?.flare_state);
   const stateElement = document.getElementById("flare-state");
   const active = stateName === "activate";
@@ -151,27 +130,6 @@ function renderState(state, latestFlare) {
   stateElement.textContent = active ? "Activate" : "None";
   stateElement.className =
     `state-badge ${active ? "state-activate" : "state-none"}`;
-
-  // latest_flare.json이 없는 경우
-  if (!latestFlare) {
-    document.getElementById("flare-start-time").textContent = "--:--";
-    document.getElementById("flare-peak-time").textContent = "--:--";
-    document.getElementById("flare-end-time").textContent = "--:--";
-    document.getElementById("flare-peak-flux").textContent = "--";
-    return;
-  }
-
-  document.getElementById("flare-start-time").textContent =
-    formatUtc(latestFlare.start_time);
-
-  document.getElementById("flare-peak-time").textContent =
-    formatUtc(latestFlare.peak_time);
-
-  document.getElementById("flare-end-time").textContent =
-    formatUtc(latestFlare.end_time);
-
-  document.getElementById("flare-peak-flux").textContent =
-    formatScientific(latestFlare.peak_flux);
 }
 
 function makePredictionOverlay(predictionData) {
@@ -493,12 +451,10 @@ async function refreshDashboard() {
     const [
       xrayResult,
       stateResult,
-      latestFlareResult,
       predictionResult,
     ] = await Promise.allSettled([
       fetchJson(DATA_PATHS.xray),
       fetchJson(DATA_PATHS.state),
-      fetchOptionalJson(DATA_PATHS.latestFlare),
       fetchJson(DATA_PATHS.prediction),
     ]);
 
@@ -514,11 +470,6 @@ async function refreshDashboard() {
         ? stateResult.value
         : null;
 
-    const latestFlare =
-      latestFlareResult.status === "fulfilled"
-        ? latestFlareResult.value
-        : null;
-
     const predictionData =
       predictionResult.status === "fulfilled"
         ? predictionResult.value
@@ -529,13 +480,6 @@ async function refreshDashboard() {
       console.error(
         "Failed to load latest_state.json:",
         stateResult.reason
-      );
-    }
-
-    if (latestFlareResult.status === "rejected") {
-      console.error(
-        "Failed to load latest_flare.json:",
-        latestFlareResult.reason
       );
     }
 
@@ -552,10 +496,7 @@ async function refreshDashboard() {
       predictionData
     );
 
-    renderState(
-      stateData,
-      latestFlare
-    );
+    renderState(stateData);
 
     message.hidden = true;
   } catch (error) {
