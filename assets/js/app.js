@@ -12,6 +12,9 @@ const REFRESH_INTERVAL_MS = 30_000;
 const Y_MIN = 1e-7;
 const Y_MAX = 1e-2;
 
+let lastRenderKey = null;
+let isRefreshing = false;
+
 function fetchJson(path) {
   const separator = path.includes("?") ? "&" : "?";
 
@@ -264,6 +267,26 @@ function renderChart(xrayData, state, predictionData) {
   const firstTime = validTimes[0];
   const lastTime = validTimes[validTimes.length - 1];
 
+  const renderKey = JSON.stringify({
+    rows,
+    flareState: state?.flare_state ?? null,
+    flareStartTime: state?.start_time ?? null,
+    predictionStartTime:
+      predictionData?.flare_start_time ?? null,
+    prediction: predictionData?.prediction ?? null,
+    lower:
+      predictionData?.prediction_interval?.lower ?? null,
+    upper:
+      predictionData?.prediction_interval?.upper ?? null,
+  });
+  
+  if (renderKey === lastRenderKey) {
+    document.getElementById("last-update").textContent =
+      formatUtc(lastTime);
+  
+    return;
+  }
+  
   const xAxisStart = formatPlotlyUtc(firstTime);
   const xAxisEnd = formatPlotlyUtc(lastTime);
 
@@ -453,11 +476,19 @@ function renderChart(xrayData, state, predictionData) {
     config
   );
 
+  lastRenderKey = renderKey;
+  
   document.getElementById("last-update").textContent =
     formatUtc(lastTime);
 }
 
 async function refreshDashboard() {
+  if (isRefreshing) {
+    return;
+  }
+
+  isRefreshing = true;
+
   const message = document.getElementById("chart-message");
 
   try {
@@ -520,6 +551,8 @@ async function refreshDashboard() {
 
     message.hidden = false;
   } finally {
+    isRefreshing = false;
+
     document.getElementById("page-refresh-time").textContent =
       `Page refreshed: ${formatUtc(new Date())}`;
   }
