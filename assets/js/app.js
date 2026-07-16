@@ -289,7 +289,20 @@ function renderChart(xrayData, state, predictionData) {
   let predictionShapes = [];
   let annotations = [];
 
-  if (normalizeState(state?.flare_state) === "activate") {
+  const stateStartTime = parseDate(state?.start_time);
+  const predictionStartTime = parseDate(
+    predictionData?.flare_start_time
+  );
+
+  const predictionMatchesCurrentFlare =
+    stateStartTime !== null &&
+    predictionStartTime !== null &&
+    stateStartTime.getTime() === predictionStartTime.getTime();
+
+  if (
+    normalizeState(state?.flare_state) === "activate" &&
+    predictionMatchesCurrentFlare
+  ) {
     const predictionOverlay =
       makePredictionOverlay(predictionData);
 
