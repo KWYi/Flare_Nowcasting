@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Real-time solar flare peak-flux nowcasting dashboard">
   <title>Solar Flare Peak-Flux Nowcast</title>
-  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/style.css?v=20260723-1">
   <script src="https://cdn.plot.ly/plotly-basic-2.35.2.min.js" defer></script>
-  <script src="assets/js/app.js" defer></script>
+  <script src="assets/js/app.js?v=20260723-1" defer></script>
 </head>
 <body>
   <header class="site-header">
@@ -39,12 +39,14 @@
     </section>
 
     <section class="card status-card" aria-labelledby="current-flare-title">
-      <div class="state-line">
-        <span id="current-flare-title">Current Flare State:</span>
-        <strong id="flare-state" class="state-badge state-monitoring">Monitoring</strong>
-      </div>
+      <div class="status-heading">
+        <h2 id="current-flare-title">Current Flare</h2>
 
-      <h3 class="current-flare-title">Current Flare</h3>
+        <div class="state-line" aria-live="polite">
+          <span>Flare State</span>
+          <strong id="flare-state" class="state-badge state-monitoring">Monitoring</strong>
+        </div>
+      </div>
 
       <div class="flare-details">
         <div class="detail-item">
