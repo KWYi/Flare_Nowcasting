@@ -38,43 +38,70 @@
       <p id="chart-message" class="message" hidden></p>
     </section>
 
-    <section class="card status-card" aria-labelledby="status-title">
+    <section class="card status-card" aria-labelledby="current-flare-title">
       <div class="state-line">
-        <span id="status-title">Current Flare State:</span>
-        <strong id="flare-state" class="state-badge state-none">None</strong>
+        <span id="current-flare-title">Current Flare State:</span>
+        <strong id="flare-state" class="state-badge state-monitoring">Monitoring</strong>
       </div>
 
+      <h3 class="current-flare-title">Current Flare</h3>
+
+      <div class="flare-details">
+        <div class="detail-item">
+          <span>Start Time</span>
+          <strong id="flare-start-time">—</strong>
+        </div>
+        <div class="detail-item">
+          <span>Start Flux</span>
+          <strong id="flare-start-flux">—</strong>
+        </div>
+        <div class="detail-item">
+          <span>Detection Time</span>
+          <strong id="flare-detection-time">—</strong>
+        </div>
+        <div class="detail-item">
+          <span>Minutes After Onset</span>
+          <strong id="minutes-after-onset">—</strong>
+        </div>
+        <div class="detail-item">
+          <span>Minutes After Detection</span>
+          <strong id="minutes-after-detection">—</strong>
+        </div>
+        <div class="detail-item">
+          <span>Peak Time</span>
+          <strong id="flare-peak-time">—</strong>
+        </div>
+        <div class="detail-item">
+          <span>Peak Flux</span>
+          <strong id="flare-peak-flux">—</strong>
+        </div>
+        <div class="detail-item">
+          <span>End Time</span>
+          <strong id="flare-end-time">—</strong>
+        </div>
+        <div class="detail-item">
+          <span>End Flux</span>
+          <strong id="flare-end-flux">—</strong>
+        </div>
+      </div>
     </section>
   </main>
 
   <footer class="site-footer">
     <div class="developer-block">
-      <p class="developer-label">
-        Developers
-      </p>
-
+      <p class="developer-label">Developers</p>
       <p class="developer-names">
         Kangwoo Yi<sup>1</sup> (ky263@njit.edu),
         Qin Li<sup>1</sup>,
         Haodi Jiang<sup>2</sup>,
         Meiqi Wang<sup>1</sup>,
-        Haimin Wang<sup>1</sup>,
-        Bo Shen<sup>1</sup>
+        Haimin Wang<sup>1</sup>
       </p>
-
-      <p class="developer-affiliation">
-        <sup>1</sup> New Jersey Institute of Technology
-      </p>
-
-      <p class="developer-affiliation">
-        <sup>2</sup> Sam Houston State University
-      </p>
+      <p class="developer-affiliation"><sup>1</sup> New Jersey Institute of Technology</p>
+      <p class="developer-affiliation"><sup>2</sup> Sam Houston State University</p>
     </div>
 
-    <span id="page-refresh-time">
-      Page refreshed: —
-    </span>
+    <span id="page-refresh-time">Page refreshed: —</span>
   </footer>
 </body>
-
 </html>
