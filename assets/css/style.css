@@ -284,3 +284,19 @@ footer {
 @media (max-width: 520px) {
   .chart { height: 430px; }
 }
+
+.list-method-note {
+  margin: 4px 0 18px;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.prediction-group-header {
+  text-align: center;
+}
+
+.mode-operational,
+.mode-retrospective {
+  font-weight: 700;
+}
