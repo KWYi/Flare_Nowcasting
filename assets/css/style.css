@@ -9,7 +9,12 @@
   --blue-dark: #0d3f73;
   --red: #d62828;
   --red-soft: #fff0f0;
+  --orange: #a85400;
+  --orange-soft: #fff4e7;
+  --purple: #7048a8;
+  --purple-soft: #f3edfb;
   --green: #177245;
+  --green-soft: #eaf7f0;
   --shadow: 0 12px 32px rgba(25, 45, 72, 0.08);
 }
 
@@ -88,18 +93,23 @@ nav {
 
 .status-card {
   margin-top: 20px;
-  padding: 22px 24px;
+  padding: 24px;
 }
 
-.section-heading {
+.section-heading,
+.status-heading {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 24px;
+}
+
+.section-heading {
   margin-bottom: 8px;
 }
 
-.section-heading h2 {
+.section-heading h2,
+.status-heading h2 {
   margin: 0;
   font-size: 1.3rem;
 }
@@ -141,30 +151,87 @@ nav {
 .state-line {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 1.05rem;
-  font-weight: 700;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 750;
 }
 
 .state-badge {
   display: inline-flex;
   align-items: center;
-  min-height: 32px;
-  padding: 6px 12px;
+  min-height: 34px;
+  padding: 7px 14px;
   border-radius: 999px;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
 }
 
-.state-none {
+.state-monitoring {
   background: #edf1f5;
   color: #465467;
 }
 
-.state-activate {
+.state-start,
+.state-rise {
+  background: var(--orange-soft);
+  color: var(--orange);
+}
+
+.state-peak {
   background: var(--red-soft);
   color: var(--red);
 }
 
+.state-decline {
+  background: var(--purple-soft);
+  color: var(--purple);
+}
+
+.state-ended {
+  background: var(--green-soft);
+  color: var(--green);
+}
+
+.state-impaired,
+.state-unavailable {
+  background: #ece7f0;
+  color: #5c4967;
+}
+
+.flare-details {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.detail-item {
+  min-width: 0;
+  padding: 14px 15px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--surface-soft);
+}
+
+.detail-item span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 750;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+
+.detail-item strong {
+  display: block;
+  margin-top: 6px;
+  overflow-wrap: anywhere;
+  font-size: 0.94rem;
+  font-variant-numeric: tabular-nums;
+}
 
 .table-wrap {
   width: 100%;
@@ -232,9 +299,7 @@ footer {
   gap: 3px;
 }
 
-.developer-block p {
-  margin: 0;
-}
+.developer-block p { margin: 0; }
 
 .developer-label {
   margin-bottom: 3px;
@@ -251,9 +316,7 @@ footer {
   font-weight: 700;
 }
 
-.developer-affiliation {
-  font-size: 0.78rem;
-}
+.developer-affiliation { font-size: 0.78rem; }
 
 .developer-names sup,
 .developer-affiliation sup {
@@ -261,29 +324,7 @@ footer {
   vertical-align: super;
 }
 
-#page-refresh-time {
-  white-space: nowrap;
-}
-
-@media (max-width: 800px) {
-  .site-header {
-    align-items: flex-start;
-    flex-direction: column;
-    padding: 22px 20px;
-  }
-
-  .page-shell { width: min(100% - 20px, 1220px); margin-top: 16px; }
-  .chart-card, .list-card, .status-card { padding: 16px; }
-  .section-heading { flex-direction: column; }
-  .update-box { width: 100%; text-align: left; }
-  .chart { height: 480px; }
-  footer {align-items: flex-start; flex-direction: column; width: calc(100% - 24px);
-}
-}
-
-@media (max-width: 520px) {
-  .chart { height: 430px; }
-}
+#page-refresh-time { white-space: nowrap; }
 
 .list-method-note {
   margin: 4px 0 18px;
@@ -292,11 +333,56 @@ footer {
   line-height: 1.55;
 }
 
-.prediction-group-header {
-  text-align: center;
-}
+.prediction-group-header { text-align: center; }
 
 .mode-operational,
-.mode-retrospective {
-  font-weight: 700;
+.mode-retrospective { font-weight: 700; }
+
+@media (max-width: 800px) {
+  .site-header {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 22px 20px;
+  }
+
+  .page-shell {
+    width: min(100% - 20px, 1220px);
+    margin-top: 16px;
+  }
+
+  .chart-card,
+  .list-card,
+  .status-card { padding: 16px; }
+
+  .section-heading,
+  .status-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .update-box {
+    width: 100%;
+    text-align: left;
+  }
+
+  .state-line {
+    justify-content: space-between;
+  }
+
+  .flare-details {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .chart { height: 480px; }
+
+  footer {
+    align-items: flex-start;
+    flex-direction: column;
+    width: calc(100% - 24px);
+  }
+}
+
+@media (max-width: 520px) {
+  .chart { height: 430px; }
+  .flare-details { grid-template-columns: 1fr; }
 }
