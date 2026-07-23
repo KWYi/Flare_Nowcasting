@@ -1,4 +1,6 @@
-const FLARE_LIST_PATH = "data/flare_list.json";
+const DATA_BASE =
+  "https://raw.githubusercontent.com/KWYi/Flare_Nowcasting/live_data/data";
+const FLARE_LIST_PATH = `${DATA_BASE}/flare_list.json`;
 const REFRESH_INTERVAL_MS = 60_000;
 
 const PRIORITY_COLUMNS = [
