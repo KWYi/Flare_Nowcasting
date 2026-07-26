@@ -223,7 +223,7 @@ nav {
   background: var(--surface-soft);
 }
 
-.detail-item span {
+.detail-item .detail-label {
   display: block;
   color: var(--muted);
   font-size: 0.75rem;
@@ -238,6 +238,19 @@ nav {
   overflow-wrap: anywhere;
   font-size: 0.94rem;
   font-variant-numeric: tabular-nums;
+}
+
+.flux-value {
+  display: inline-flex;
+}
+
+.flux-value .flux-unit {
+  display: inline;
+  color: inherit;
+  font-size: 0.8rem;
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
 }
 
 .table-wrap {
