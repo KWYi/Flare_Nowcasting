@@ -223,7 +223,7 @@ nav {
   background: var(--surface-soft);
 }
 
-.detail-item .detail-label {
+.detail-item > span {
   display: block;
   color: var(--muted);
   font-size: 0.75rem;
@@ -246,19 +246,27 @@ nav {
   gap: 0.3em;
   margin-top: 6px;
   white-space: nowrap;
+
+  font-family: inherit;
+  font-size: 0.94rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 .detail-item .flux-value strong {
   display: inline;
   margin-top: 0;
   overflow-wrap: normal;
+  font-size: inherit;
+  font-weight: inherit;
 }
 
 .detail-item .flux-value .flux-unit {
   display: inline;
   color: inherit;
-  font-size: 0.8rem;
-  font-weight: 400;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
   letter-spacing: normal;
   text-transform: none;
 }
