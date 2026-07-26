@@ -242,9 +242,19 @@ nav {
 
 .flux-value {
   display: inline-flex;
+  align-items: baseline;
+  gap: 0.3em;
+  margin-top: 6px;
+  white-space: nowrap;
 }
 
-.flux-value .flux-unit {
+.detail-item .flux-value strong {
+  display: inline;
+  margin-top: 0;
+  overflow-wrap: normal;
+}
+
+.detail-item .flux-value .flux-unit {
   display: inline;
   color: inherit;
   font-size: 0.8rem;
