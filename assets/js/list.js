@@ -3,6 +3,11 @@ const DATA_BASE =
 const FLARE_LIST_PATH = `${DATA_BASE}/flare_list.json`;
 const REFRESH_INTERVAL_MS = 60_000;
 
+const RECORDS_PER_PAGE = 100;
+let allRows = [];
+let currentPage = 1;
+let displayColumns = [];
+
 const PRIORITY_COLUMNS = [
   "processing_mode",
   "start_time",
@@ -132,47 +137,137 @@ function formatCell(column, value) {
   };
 }
 
+function updatePaginationControls() {
+  const controls = document.querySelector(".pagination-controls");
+  const prevButton = document.getElementById("prev-page");
+  const nextButton = document.getElementById("next-page");
+  const pageInfo = document.getElementById("page-info");
+
+  if (!controls || !prevButton || !nextButton || !pageInfo) {
+    return;
+  }
+
+  if (allRows.length === 0) {
+    controls.hidden = true;
+    pageInfo.textContent = "0 / 0";
+    prevButton.disabled = true;
+    nextButton.disabled = true;
+    return;
+  }
+
+  controls.hidden = false;
+
+  const totalPages = Math.ceil(allRows.length / RECORDS_PER_PAGE);
+
+  pageInfo.textContent = `${currentPage} / ${totalPages}`;
+  prevButton.disabled = currentPage <= 1;
+  nextButton.disabled = currentPage >= totalPages;
+}
+
+function renderCurrentPage() {
+  const table = document.getElementById("flare-table");
+  const tbody = table.querySelector("tbody");
+
+  tbody.replaceChildren();
+
+  if (allRows.length === 0) {
+    updatePaginationControls();
+    return;
+  }
+
+  const totalPages = Math.ceil(allRows.length / RECORDS_PER_PAGE);
+
+  // 데이터 수가 줄어들어 현재 페이지가 없어졌을 경우 마지막 페이지로 이동
+  currentPage = Math.min(Math.max(currentPage, 1), totalPages);
+
+  const startIndex = (currentPage - 1) * RECORDS_PER_PAGE;
+  const endIndex = startIndex + RECORDS_PER_PAGE;
+  const pageRows = allRows.slice(startIndex, endIndex);
+
+  pageRows.forEach((row) => {
+    const tr = document.createElement("tr");
+
+    displayColumns.forEach((column) => {
+      const td = document.createElement("td");
+      const formatted = formatCell(column, row[column]);
+
+      td.textContent = formatted.text;
+
+      if (formatted.className) {
+        td.className = formatted.className;
+      }
+
+      tr.appendChild(td);
+    });
+
+    tbody.appendChild(tr);
+  });
+
+  updatePaginationControls();
+}
+
 function renderTable(data) {
-  const rows = Array.isArray(data) ? [...data] : [];
-  rows.sort((a, b) => {
-    const aDate = parseDate(a.start_time)?.getTime() ?? Number.NEGATIVE_INFINITY;
-    const bDate = parseDate(b.start_time)?.getTime() ?? Number.NEGATIVE_INFINITY;
+  allRows = Array.isArray(data) ? [...data] : [];
+
+  allRows.sort((a, b) => {
+    const aDate =
+      parseDate(a.start_time)?.getTime() ?? Number.NEGATIVE_INFINITY;
+    const bDate =
+      parseDate(b.start_time)?.getTime() ?? Number.NEGATIVE_INFINITY;
+
     return bDate - aDate;
   });
 
   const table = document.getElementById("flare-table");
   const thead = table.querySelector("thead");
   const tbody = table.querySelector("tbody");
+
   thead.replaceChildren();
   tbody.replaceChildren();
 
-  if (rows.length === 0) {
+  if (allRows.length === 0) {
     table.hidden = true;
+    currentPage = 1;
+    displayColumns = [];
+
     document.getElementById("record-count").textContent = "0";
+    updatePaginationControls();
     return;
   }
 
   table.hidden = false;
-  const columns = collectColumns(rows);
-  const predictionColumns = columns.filter((column) => /^prediction_\d+m$/.test(column));
-  const eventColumns = columns.filter((column) => !predictionColumns.includes(column));
+
+  const columns = collectColumns(allRows);
+
+  const predictionColumns = columns.filter((column) =>
+    /^prediction_\d+m$/.test(column)
+  );
+
+  const eventColumns = columns.filter(
+    (column) => !predictionColumns.includes(column)
+  );
 
   const groupHeaderRow = document.createElement("tr");
 
   eventColumns.forEach((column) => {
     const th = document.createElement("th");
+
     th.scope = "col";
     th.rowSpan = predictionColumns.length > 0 ? 2 : 1;
     th.textContent = columnLabel(column);
+
     groupHeaderRow.appendChild(th);
   });
 
   if (predictionColumns.length > 0) {
     const predictionGroup = document.createElement("th");
+
     predictionGroup.scope = "colgroup";
     predictionGroup.colSpan = predictionColumns.length;
     predictionGroup.className = "prediction-group-header";
-    predictionGroup.textContent = "Predicted Peak Flux (Time After Flare Detection)";
+    predictionGroup.textContent =
+      "Predicted Peak Flux (Time After Flare Detection)";
+
     groupHeaderRow.appendChild(predictionGroup);
   }
 
@@ -180,30 +275,30 @@ function renderTable(data) {
 
   if (predictionColumns.length > 0) {
     const predictionHeaderRow = document.createElement("tr");
+
     predictionColumns.forEach((column) => {
       const th = document.createElement("th");
+
       th.scope = "col";
       th.textContent = columnLabel(column);
+
       predictionHeaderRow.appendChild(th);
     });
+
     thead.appendChild(predictionHeaderRow);
   }
 
-  const displayColumns = [...eventColumns, ...predictionColumns];
+  displayColumns = [...eventColumns, ...predictionColumns];
 
-  rows.forEach((row) => {
-    const tr = document.createElement("tr");
-    displayColumns.forEach((column) => {
-      const td = document.createElement("td");
-      const formatted = formatCell(column, row[column]);
-      td.textContent = formatted.text;
-      if (formatted.className) td.className = formatted.className;
-      tr.appendChild(td);
-    });
-    tbody.appendChild(tr);
-  });
+  const totalPages = Math.ceil(allRows.length / RECORDS_PER_PAGE);
 
-  document.getElementById("record-count").textContent = String(rows.length);
+  // 새로고침할 때 현재 페이지를 유지하되 범위를 벗어나면 조정
+  currentPage = Math.min(Math.max(currentPage, 1), totalPages);
+
+  document.getElementById("record-count").textContent =
+    String(allRows.length);
+
+  renderCurrentPage();
 }
 
 async function refreshList() {
@@ -222,6 +317,31 @@ async function refreshList() {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
+  const prevButton = document.getElementById("prev-page");
+  const nextButton = document.getElementById("next-page");
+
+  prevButton.addEventListener("click", () => {
+    if (currentPage <= 1) {
+      return;
+    }
+
+    currentPage -= 1;
+    renderCurrentPage();
+  });
+
+  nextButton.addEventListener("click", () => {
+    const totalPages = Math.ceil(
+      allRows.length / RECORDS_PER_PAGE
+    );
+
+    if (currentPage >= totalPages) {
+      return;
+    }
+
+    currentPage += 1;
+    renderCurrentPage();
+  });
+
   refreshList();
   window.setInterval(refreshList, REFRESH_INTERVAL_MS);
 });
