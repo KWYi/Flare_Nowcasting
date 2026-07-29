@@ -373,7 +373,7 @@ footer {
 
 .prediction-group-header { text-align: center; }
 
-.mode-operational,
+.mode-real-time,
 .mode-retrospective { font-weight: 700; }
 
 @media (max-width: 800px) {
