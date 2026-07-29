@@ -116,7 +116,7 @@ function formatCell(column, value) {
     const modeClass = mode.replace(/\s+/g, "-");
     const text = mode === "retrospective" ? "Retrospective" :
       mode === "real time" ? "Real Time" : String(value);
-    return { text, className: `mode-${mode}` };
+    return { text, className: `mode-${modeClass}` };
   }
 
   if (isFiniteNumber(value) && isFluxOrPredictionColumn(column)) {
