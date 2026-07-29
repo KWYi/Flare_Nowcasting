@@ -9,14 +9,14 @@ let currentPage = 1;
 let displayColumns = [];
 
 const PRIORITY_COLUMNS = [
-  "processing_mode",
   "start_time",
-  "flare_detection_time",
-  "peak_time",
-  "end_time",
   "start_flux",
+  "peak_time",
   "peak_flux",
+  "end_time",  
   "end_flux",
+  "flare_detection_time",
+  "processing_mode",
 ];
 
 // 예전 flare_list.json에 남아 있어도 웹 표에는 표시하지 않음.
@@ -114,7 +114,7 @@ function formatCell(column, value) {
   if (column === "processing_mode") {
     const mode = String(value).toLowerCase();
     const text = mode === "retrospective" ? "Retrospective" :
-      mode === "operational" ? "Operational" : String(value);
+      mode === "real time" ? "Real Time" : String(value);
     return { text, className: `mode-${mode}` };
   }
 
