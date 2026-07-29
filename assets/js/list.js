@@ -113,6 +113,7 @@ function formatCell(column, value) {
 
   if (column === "processing_mode") {
     const mode = String(value).toLowerCase();
+    const modeClass = mode.replace(/\s+/g, "-");
     const text = mode === "retrospective" ? "Retrospective" :
       mode === "real time" ? "Real Time" : String(value);
     return { text, className: `mode-${mode}` };
