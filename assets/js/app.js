@@ -403,6 +403,7 @@ function renderChart(xrayData, state, predictionData) {
         y0: value,
         y1: value,
         line: { color: "#aab4c0", width: 1, dash: "dot" },
+        layer: "below",
       })),
     ],
   };
