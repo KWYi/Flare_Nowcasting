@@ -236,7 +236,7 @@ function makePredictionOverlay(predictionData) {
           width: 1,
           dash: "dot",
         },
-        layer: "below",
+        layer: "between",
       },
       {
         type: "line",
