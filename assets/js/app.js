@@ -230,8 +230,12 @@ function makePredictionOverlay(predictionData) {
         yref: "y",
         y0: lower,
         y1: upper,
-        fillcolor: "rgba(120, 130, 140, 0.18)",
-        line: { width: 0 },
+        fillcolor: "rgba(214, 40, 40, 0.10)",
+        line: {
+          color: "rgba(214, 40, 40, 0.55)",
+          width: 1,
+          dash: "dot",
+        },
         layer: "below",
       },
       {
