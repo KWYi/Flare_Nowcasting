@@ -206,94 +206,75 @@ function predictionBelongsToCurrentFlare(state, predictionData) {
   return stateDetectionTime.getTime() === predictionDetectionTime.getTime();
 }
 
-function makePredictionOverlay(predictionData) {
+function makePredictionOverlay(predictionData, plotTimes) {
   const predicted = Number(predictionData?.prediction);
   const lower = Number(predictionData?.prediction_interval?.lower);
   const upper = Number(predictionData?.prediction_interval?.upper);
 
-  if (![predicted, lower, upper].every(Number.isFinite)) {
-    return { shapes: [], annotations: [] };
+  if (
+    ![predicted, lower, upper].every(Number.isFinite) ||
+    !Array.isArray(plotTimes) ||
+    plotTimes.length === 0
+  ) {
+    return { traces: [], annotations: [] };
   }
 
-  const minuteValue = Number(predictionData?.minutes_after_detection);
-  const minuteLabel = Number.isFinite(minuteValue)
-    ? ` (${minuteValue} min after detection)`
-    : "";
+
+  const lowerValues = plotTimes.map(() => lower);
+  const upperValues = plotTimes.map(() => upper);
+  const predictedValues = plotTimes.map(() => predicted);
+
+  const lowerTrace = {
+    x: plotTimes,
+    y: lowerValues,
+    type: "scatter",
+    mode: "lines",
+    showlegend: false,
+    hoverinfo: "skip",
+    line: {
+      color: "rgba(214, 40, 40, 0.75)",
+      width: 1.5,
+      dash: "dash",
+    },
+  };
+
+  const upperTrace = {
+    x: plotTimes,
+    y: upperValues,
+    type: "scatter",
+    mode: "lines",
+    showlegend: false,
+    hoverinfo: "skip",
+    fill: "tonexty",
+    fillcolor: "rgba(214, 40, 40, 0.10)",
+    line: {
+      color: "rgba(214, 40, 40, 0.75)",
+      width: 1.5,
+      dash: "dash",
+    },
+  };
+
+  const predictionTrace = {
+    x: plotTimes,
+    y: predictedValues,
+    type: "scatter",
+    mode: "lines",
+    name: "Predicted peak",
+    line: {
+      color: "#d62828",
+      width: 3,
+      dash: "longdash",
+    },
+    hovertemplate:
+      "<b>Predicted peak:</b> %{y:.2e} W m⁻²" +
+      `<br>Lower: ${lower.toExponential(2)} W m⁻²` +
+      `<br>Upper: ${upper.toExponential(2)} W m⁻²` +
+      "<extra></extra>",
+  };
 
   return {
-    shapes: [
-      {
-        type: "rect",
-        xref: "paper",
-        x0: 0,
-        x1: 1,
-        yref: "y",
-        y0: lower,
-        y1: upper,
-        fillcolor: "rgba(214, 40, 40, 0.10)",
-        line: {
-          color: "rgba(214, 40, 40, 0.55)",
-          width: 1,
-          dash: "dot",
-        },
-        layer: "between",
-      },
-      {
-        type: "line",
-        xref: "paper",
-        x0: 0,
-        x1: 1,
-        yref: "y",
-        y0: predicted,
-        y1: predicted,
-        line: {
-          color: "#d62828",
-          width: 2.5,
-          dash: "dash",
-        },
-      },
-    ],
-    annotations: [
-      {
-        xref: "paper",
-        x: 1,
-        yref: "y",
-        y: predicted,
-        text: `Predicted peak: ${formatScientific(predicted)}${minuteLabel}`,
-        showarrow: false,
-        xanchor: "right",
-        yanchor: "bottom",
-        xshift: -8,
-        yshift: 5,
-        font: { color: "#b71919", size: 12 },
-        bgcolor: "rgba(255,255,255,0.88)",
-        borderpad: 3,
-      },
-      {
-        xref: "paper",
-        x: 1,
-        yref: "y",
-        y: upper,
-        text: `Upper: ${formatScientific(upper)}`,
-        showarrow: false,
-        xanchor: "right",
-        yanchor: "bottom",
-        xshift: -8,
-        font: { color: "#b71919", size: 11 },
-      },
-      {
-        xref: "paper",
-        x: 1,
-        yref: "y",
-        y: lower,
-        text: `Lower: ${formatScientific(lower)}`,
-        showarrow: false,
-        xanchor: "right",
-        yanchor: "top",
-        xshift: -8,
-        font: { color: "#b71919", size: 11 },
-      },
-    ],
+    traces: [lowerTrace, upperTrace, predictionTrace],
+    annotations: [],
   };
 }
 
@@ -349,12 +330,12 @@ function renderChart(xrayData, state, predictionData) {
       "<extra></extra>",
   };
 
-  let predictionShapes = [];
+  let predictionTraces = [];
   let annotations = [];
 
   if (predictionBelongsToCurrentFlare(state, predictionData)) {
-    const overlay = makePredictionOverlay(predictionData);
-    predictionShapes = overlay.shapes;
+    const overlay = makePredictionOverlay(predictionData, plotTimes);
+    predictionTraces = overlay.traces;
     annotations = overlay.annotations;
   }
 
@@ -393,7 +374,6 @@ function renderChart(xrayData, state, predictionData) {
     },
     annotations,
     shapes: [
-      ...predictionShapes,
       ...[1e-6, 1e-5, 1e-4].map((value) => ({
         type: "line",
         xref: "paper",
@@ -414,7 +394,16 @@ function renderChart(xrayData, state, predictionData) {
     modeBarButtonsToRemove: ["select2d", "lasso2d", "autoScale2d"],
   };
 
-  Plotly.react("xray-chart", [observedTrace], layout, config);
+  const chartTraces = predictionTraces.length === 3
+    ? [
+        predictionTraces[0],
+        predictionTraces[1],
+        observedTrace,
+        predictionTraces[2],
+      ]
+    : [observedTrace];
+
+  Plotly.react("xray-chart", chartTraces, layout, config);
   lastRenderKey = renderKey;
 }
 
