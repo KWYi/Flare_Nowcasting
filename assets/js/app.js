@@ -267,8 +267,8 @@ function makePredictionOverlay(predictionData, plotTimes) {
     },
     hovertemplate:
       "<b>Predicted peak:</b> %{y:.2e} W m⁻²" +
-      `<br>Lower: ${lower.toExponential(2)} W m⁻²` +
       `<br>Upper: ${upper.toExponential(2)} W m⁻²` +
+      `<br>Lower: ${lower.toExponential(2)} W m⁻²` +      
       "<extra></extra>",
   };
 
