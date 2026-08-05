@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Real-time solar flare peak-flux nowcasting dashboard">
   <title>Solar Flare Peak-Flux Nowcast</title>
-  <link rel="stylesheet" href="assets/css/style.css?v=20260723-1">
+  <link rel="stylesheet" href="assets/css/style.css?v=20260805-1">
   <script src="https://cdn.plot.ly/plotly-basic-2.35.2.min.js" defer></script>
-  <script src="assets/js/app.js?v=20260723-1" defer></script>
+  <script src="assets/js/app.js?v=20260805-1" defer></script>
 </head>
 <body>
   <header class="site-header">
@@ -34,7 +34,53 @@
         </div>
       </div>
 
-      <div id="xray-chart" class="chart" role="img" aria-label="GOES X-ray flux time series and peak-flux nowcast"></div>
+      <div class="chart-grid">
+        <section class="chart-panel observation-panel" aria-labelledby="observation-chart-title">
+          <div class="chart-panel-heading">
+            <div>
+              <h3 id="observation-chart-title">Observed X-ray Flux</h3>
+              <p>Latest 60-minute GOES observation</p>
+            </div>
+            <span class="series-key series-key-observed">Observed</span>
+          </div>
+          <div
+            id="xray-chart"
+            class="chart dashboard-chart"
+            role="img"
+            aria-label="Latest 60-minute GOES X-ray flux observation"
+          ></div>
+        </section>
+
+        <section class="chart-panel prediction-panel" aria-labelledby="prediction-chart-title">
+          <div class="chart-panel-heading">
+            <div>
+              <h3 id="prediction-chart-title">Peak-Flux Nowcast</h3>
+              <p>Predicted peak and uncertainty</p>
+            </div>
+            <span class="series-key series-key-prediction">Nowcast</span>
+          </div>
+          <div
+            id="prediction-chart"
+            class="chart dashboard-chart"
+            role="img"
+            aria-label="Predicted flare peak flux with uncertainty error bar"
+          ></div>
+
+          <div class="prediction-summary" aria-live="polite">
+            <div class="prediction-summary-item">
+              <span>Predicted peak flux</span>
+              <strong id="prediction-value">—</strong>
+              <small>W m<sup>&minus;2</sup></small>
+            </div>
+            <div class="prediction-summary-item">
+              <span>Uncertainty range</span>
+              <strong id="prediction-range">—</strong>
+              <small>W m<sup>&minus;2</sup></small>
+            </div>
+          </div>
+        </section>
+      </div>
+
       <p id="chart-message" class="message" hidden></p>
     </section>
 
@@ -58,31 +104,31 @@
         <div class="detail-item">
           <span>Peak Time</span>
           <strong id="flare-peak-time">—</strong>
-        </div>        
+        </div>
         <div class="detail-item">
           <span>End Time</span>
           <strong id="flare-end-time">—</strong>
         </div>
         <div class="detail-item">
-          <span>Start Flux</span>          
+          <span>Start Flux</span>
           <div class="flux-value">
             <strong id="flare-start-flux">—</strong>
             <span>W m<sup>&minus;2</sup></span>
-          </div>          
+          </div>
         </div>
         <div class="detail-item">
           <span>Peak Flux</span>
           <div class="flux-value">
             <strong id="flare-peak-flux">—</strong>
             <span>W m<sup>&minus;2</sup></span>
-          </div>          
+          </div>
         </div>
         <div class="detail-item">
           <span>End Flux</span>
           <div class="flux-value">
             <strong id="flare-end-flux">—</strong>
             <span>W m<sup>&minus;2</sup></span>
-          </div>          
+          </div>
         </div>
         <div class="detail-item">
           <span>Detection Time</span>
