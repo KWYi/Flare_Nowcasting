@@ -1,5 +1,5 @@
 const DATA_BASE =
-  "https://raw.githubusercontent.com/KWYi/Flare_Nowcasting/live_data/data";
+  "./data";
 
 const DATA_PATHS = {
   xray: `${DATA_BASE}/latest_X-ray_60m.json`,
@@ -10,6 +10,8 @@ const DATA_PATHS = {
 const REFRESH_INTERVAL_MS = 30_000;
 const Y_MIN = 1e-7;
 const Y_MAX = 1e-2;
+const Y_TICKS = [1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2];
+const Y_TICK_LABELS = ["10⁻⁷", "10⁻⁶", "10⁻⁵", "10⁻⁴", "10⁻³", "10⁻²"];
 
 let lastRenderKey = null;
 let isRefreshing = false;
@@ -26,11 +28,6 @@ function fetchJson(path) {
 
     return response.json();
   });
-}
-
-function isFiniteNumber(value) {
-  const numericValue = Number(value);
-  return Number.isFinite(numericValue);
 }
 
 function formatScientific(value) {
@@ -206,79 +203,202 @@ function predictionBelongsToCurrentFlare(state, predictionData) {
   return stateDetectionTime.getTime() === predictionDetectionTime.getTime();
 }
 
-function makePredictionOverlay(predictionData, plotTimes) {
+function getValidPrediction(state, predictionData) {
+  if (!predictionBelongsToCurrentFlare(state, predictionData)) {
+    return null;
+  }
+
   const predicted = Number(predictionData?.prediction);
   const lower = Number(predictionData?.prediction_interval?.lower);
   const upper = Number(predictionData?.prediction_interval?.upper);
 
   if (
     ![predicted, lower, upper].every(Number.isFinite) ||
-    !Array.isArray(plotTimes) ||
-    plotTimes.length === 0
+    predicted <= 0 ||
+    lower <= 0 ||
+    upper <= 0 ||
+    lower > predicted ||
+    upper < predicted
   ) {
-    return { traces: [], annotations: [] };
+    return null;
   }
 
+  return { predicted, lower, upper };
+}
 
-  const lowerValues = plotTimes.map(() => lower);
-  const upperValues = plotTimes.map(() => upper);
-  const predictedValues = plotTimes.map(() => predicted);
-
-  const lowerTrace = {
-    x: plotTimes,
-    y: lowerValues,
-    type: "scatter",
-    mode: "lines",
-    showlegend: false,
-    hoverinfo: "skip",
-    line: {
-      color: "rgba(214, 40, 40, 0.75)",
-      width: 1.5,
-      dash: "dash",
-    },
-  };
-
-  const upperTrace = {
-    x: plotTimes,
-    y: upperValues,
-    type: "scatter",
-    mode: "lines",
-    showlegend: false,
-    hoverinfo: "skip",
-    fill: "tonexty",
-    fillcolor: "rgba(214, 40, 40, 0.10)",
-    line: {
-      color: "rgba(214, 40, 40, 0.75)",
-      width: 1.5,
-      dash: "dash",
-    },
-  };
-
-  const predictionTrace = {
-    x: plotTimes,
-    y: predictedValues,
-    type: "scatter",
-    mode: "lines",
-    name: "Predicted peak",
-    line: {
-      color: "#d62828",
-      width: 3,
-      dash: "longdash",
-    },
-    hovertemplate:
-      "<b>Predicted peak:</b> %{y:.2e} W m⁻²" +
-      `<br>Upper: ${upper.toExponential(2)} W m⁻²` +
-      `<br>Lower: ${lower.toExponential(2)} W m⁻²` +      
-      "<extra></extra>",
-  };
-
+function makeSharedYAxis() {
   return {
-    traces: [lowerTrace, upperTrace, predictionTrace],
-    annotations: [],
+    title: { text: "X-ray Flux (W m⁻²)", standoff: 10 },
+    type: "log",
+    range: [Math.log10(Y_MIN), Math.log10(Y_MAX)],
+    tickvals: Y_TICKS,
+    ticktext: Y_TICK_LABELS,
+    showgrid: true,
+    gridcolor: "#dfe5ec",
+    minor: { showgrid: true, gridcolor: "#f0f3f7" },
+    zeroline: false,
+    fixedrange: true,
   };
 }
 
-function renderChart(xrayData, state, predictionData) {
+function makeClassBoundaryShapes() {
+  return [1e-6, 1e-5, 1e-4].map((value) => ({
+    type: "line",
+    xref: "paper",
+    x0: 0,
+    x1: 1,
+    yref: "y",
+    y0: value,
+    y1: value,
+    line: { color: "#aab4c0", width: 1, dash: "dot" },
+    layer: "below",
+  }));
+}
+
+function makePlotConfig() {
+  return {
+    responsive: true,
+    displaylogo: false,
+    modeBarButtonsToRemove: ["select2d", "lasso2d", "autoScale2d"],
+  };
+}
+
+function renderObservationChart(plotTimes, fluxes, firstTime, lastTime) {
+  const observedTrace = {
+    x: plotTimes,
+    y: fluxes,
+    type: "scatter",
+    mode: "lines",
+    name: "Observed X-ray flux",
+    connectgaps: false,
+    line: { color: "#145da0", width: 2.5 },
+    hovertemplate:
+      "%{x|%b %d, %Y %H:%M UTC}" +
+      "<br>Flux: %{y:.2e} W m⁻²" +
+      "<extra></extra>",
+  };
+
+  const layout = {
+    margin: { l: 78, r: 28, t: 20, b: 78 },
+    paper_bgcolor: "#ffffff",
+    plot_bgcolor: "#ffffff",
+    hovermode: "closest",
+    showlegend: false,
+    xaxis: {
+      title: { text: "Time (UTC)", standoff: 14 },
+      type: "date",
+      range: [formatPlotlyUtc(firstTime), formatPlotlyUtc(lastTime)],
+      showgrid: true,
+      gridcolor: "#e5eaf0",
+      zeroline: false,
+      tickformat: "%b %d<br>%H:%M",
+      hoverformat: "%b %d, %Y %H:%M UTC",
+      rangeslider: { visible: false },
+    },
+    yaxis: makeSharedYAxis(),
+    shapes: makeClassBoundaryShapes(),
+  };
+
+  Plotly.react("xray-chart", [observedTrace], layout, makePlotConfig());
+}
+
+function renderPredictionSummary(prediction) {
+  if (!prediction) {
+    setText("prediction-value", "—");
+    setText("prediction-range", "—");
+    return;
+  }
+
+  setText("prediction-value", formatScientific(prediction.predicted));
+  setText(
+    "prediction-range",
+    `${formatScientific(prediction.lower)} – ${formatScientific(prediction.upper)}`
+  );
+}
+
+function renderPredictionChart(prediction) {
+  const traces = [];
+  const annotations = [];
+
+  if (prediction) {
+    traces.push({
+      x: [0],
+      y: [prediction.predicted],
+      type: "scatter",
+      mode: "markers",
+      name: "Predicted peak flux",
+      marker: {
+        color: "#d62828",
+        size: 18,
+        line: { color: "#ffffff", width: 2 },
+      },
+      error_y: {
+        type: "data",
+        symmetric: false,
+        array: [prediction.upper - prediction.predicted],
+        arrayminus: [prediction.predicted - prediction.lower],
+        visible: true,
+        color: "#d62828",
+        thickness: 2.5,
+        width: 12,
+      },
+      customdata: [[prediction.lower, prediction.upper]],
+      hovertemplate:
+        "<b>Predicted peak:</b> %{y:.2e} W m⁻²" +
+        "<br>Upper: %{customdata[1]:.2e} W m⁻²" +
+        "<br>Lower: %{customdata[0]:.2e} W m⁻²" +
+        "<extra></extra>",
+    });
+  } else {
+    traces.push({
+      x: [0],
+      y: [null],
+      type: "scatter",
+      mode: "markers",
+      hoverinfo: "skip",
+      showlegend: false,
+    });
+
+    annotations.push({
+      xref: "paper",
+      yref: "paper",
+      x: 0.5,
+      y: 0.5,
+      text: "No active nowcast",
+      showarrow: false,
+      font: { color: "#637083", size: 14 },
+      bgcolor: "rgba(248, 250, 252, 0.92)",
+      bordercolor: "#dce3ec",
+      borderwidth: 1,
+      borderpad: 8,
+    });
+  }
+
+  const layout = {
+    margin: { l: 78, r: 28, t: 20, b: 78 },
+    paper_bgcolor: "#ffffff",
+    plot_bgcolor: "#ffffff",
+    hovermode: "closest",
+    showlegend: false,
+    xaxis: {
+      type: "linear",
+      range: [-0.75, 0.75],
+      tickvals: [0],
+      ticktext: ["Nowcast"],
+      showgrid: false,
+      zeroline: false,
+      fixedrange: true,
+    },
+    yaxis: makeSharedYAxis(),
+    shapes: makeClassBoundaryShapes(),
+    annotations,
+  };
+
+  Plotly.react("prediction-chart", traces, layout, makePlotConfig());
+  renderPredictionSummary(prediction);
+}
+
+function renderCharts(xrayData, state, predictionData) {
   const rows = Array.isArray(xrayData) ? xrayData : [];
   const timeDates = rows.map((row) => parseDate(row.time_tag));
   const plotTimes = timeDates.map((date) =>
@@ -298,6 +418,7 @@ function renderChart(xrayData, state, predictionData) {
 
   const firstTime = validTimes[0];
   const lastTime = validTimes[validTimes.length - 1];
+  const prediction = getValidPrediction(state, predictionData);
 
   const renderKey = JSON.stringify({
     rows,
@@ -305,9 +426,9 @@ function renderChart(xrayData, state, predictionData) {
     eventActive: state?.event_active ?? null,
     flareDetectionTime: state?.flare_detection_time ?? null,
     predictionDetectionTime: predictionData?.flare_detection_time ?? null,
-    prediction: predictionData?.prediction ?? null,
-    lower: predictionData?.prediction_interval?.lower ?? null,
-    upper: predictionData?.prediction_interval?.upper ?? null,
+    prediction: prediction?.predicted ?? null,
+    lower: prediction?.lower ?? null,
+    upper: prediction?.upper ?? null,
   });
 
   setText("last-update", formatUtc(lastTime));
@@ -316,94 +437,8 @@ function renderChart(xrayData, state, predictionData) {
     return;
   }
 
-  const observedTrace = {
-    x: plotTimes,
-    y: fluxes,
-    type: "scatter",
-    mode: "lines",
-    name: "Observed X-ray flux",
-    connectgaps: false,
-    line: { color: "#145da0", width: 2.5 },
-    hovertemplate:
-      "%{x|%b %d, %Y %H:%M UTC}" +
-      "<br>Flux: %{y:.2e} W m⁻²" +
-      "<extra></extra>",
-  };
-
-  let predictionTraces = [];
-  let annotations = [];
-
-  if (predictionBelongsToCurrentFlare(state, predictionData)) {
-    const overlay = makePredictionOverlay(predictionData, plotTimes);
-    predictionTraces = overlay.traces;
-    annotations = overlay.annotations;
-  }
-
-  const layout = {
-    margin: { l: 78, r: 32, t: 22, b: 78 },
-    paper_bgcolor: "#ffffff",
-    plot_bgcolor: "#ffffff",
-    hovermode: "closest",
-    legend: {
-      orientation: "h",
-      x: 0,
-      y: 1.08,
-      font: { size: 12 },
-    },
-    xaxis: {
-      title: { text: "Time (UTC)", standoff: 14 },
-      type: "date",
-      range: [formatPlotlyUtc(firstTime), formatPlotlyUtc(lastTime)],
-      showgrid: true,
-      gridcolor: "#e5eaf0",
-      zeroline: false,
-      tickformat: "%b %d<br>%H:%M",
-      hoverformat: "%b %d, %Y %H:%M UTC",
-      rangeslider: { visible: false },
-    },
-    yaxis: {
-      title: { text: "X-ray Flux (W m⁻²)", standoff: 10 },
-      type: "log",
-      range: [Math.log10(Y_MIN), Math.log10(Y_MAX)],
-      tickvals: [1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2],
-      ticktext: ["10⁻⁷", "10⁻⁶", "10⁻⁵", "10⁻⁴", "10⁻³", "10⁻²"],
-      showgrid: true,
-      gridcolor: "#dfe5ec",
-      minor: { showgrid: true, gridcolor: "#f0f3f7" },
-      zeroline: false,
-    },
-    annotations,
-    shapes: [
-      ...[1e-6, 1e-5, 1e-4].map((value) => ({
-        type: "line",
-        xref: "paper",
-        x0: 0,
-        x1: 1,
-        yref: "y",
-        y0: value,
-        y1: value,
-        line: { color: "#aab4c0", width: 1, dash: "dot" },
-        layer: "below",
-      })),
-    ],
-  };
-
-  const config = {
-    responsive: true,
-    displaylogo: false,
-    modeBarButtonsToRemove: ["select2d", "lasso2d", "autoScale2d"],
-  };
-
-  const chartTraces = predictionTraces.length === 3
-    ? [
-        predictionTraces[0],
-        predictionTraces[1],
-        observedTrace,
-        predictionTraces[2],
-      ]
-    : [observedTrace];
-
-  Plotly.react("xray-chart", chartTraces, layout, config);
+  renderObservationChart(plotTimes, fluxes, firstTime, lastTime);
+  renderPredictionChart(prediction);
   lastRenderKey = renderKey;
 }
 
@@ -447,7 +482,7 @@ async function refreshDashboard() {
     }
 
     renderCurrentFlare(stateData);
-    renderChart(xrayData, stateData, predictionData);
+    renderCharts(xrayData, stateData, predictionData);
     message.hidden = true;
   } catch (error) {
     console.error(error);
