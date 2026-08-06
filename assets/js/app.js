@@ -1,5 +1,5 @@
 const DATA_BASE =
-  "./data";
+  ""https://raw.githubusercontent.com/KWYi/Flare_Nowcasting/live_data/data";";
 
 const DATA_PATHS = {
   xray: `${DATA_BASE}/latest_X-ray_60m.json`,
